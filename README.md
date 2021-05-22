@@ -18,13 +18,6 @@ Verify when a user joins? (default=False): False
 Verified role (default=Verified): Verified
 ```
 
-## Example
-
-Let's say you want a Discord server just for people who have a @randomuniversity.edu email address. Add this bot to your server and when someone joins, they will get a DM asking for their @randomuniversity.edu email address. The bot then emails them a verification code. If they reply with the correct code, they get the "Verified" role.
-
-<p align="center">
-  <img src="docs/screenshot.png" />
-</p>
 
 ## Installation
 
