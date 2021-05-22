@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 import sqlite3
@@ -5,9 +6,17 @@ import re
 import os
 import random
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, subject, to_email
 import requests
 from keep_alive import keep_alive
+
+import smtplib
+from email.message import EmailMessage
+
+gmail_user = "aadharshaadhithya@gmail.com"
+gmail_password = "eyfytwftzoobegdo"
+
+
 
 conn = sqlite3.connect('bot.db')
 c = conn.cursor()
@@ -100,7 +109,7 @@ def insert_email(email, userid, guildid):
     conn.commit()
 
 def email_check(email):
-    regex = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+    regex = "cb\.en\.u4[a-z][a-z][a-z]20\d\d\d@cb\.students\.amrita\.edu"
     if re.search(regex, email):
         return True
     else:
@@ -114,6 +123,32 @@ def mailgun_send(email_address, verification_code):
 			"to": email_address,
 			"subject": "Verify your server email",
 			"text": str(verification_code)})
+
+
+def gmail_send(email_address , verification_code):
+    msg = EmailMessage()
+    msg['Subject'] = "Discord Verification"
+    msg["From"] = gmail_user
+    msg["To"] = email_address
+    msg.set_content(verification_code)
+    try:
+        with smtplib.SMTP('smtp.gmail.com' , 587) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+
+                    smtp.login(gmail_user, gmail_password)
+
+                    smtp.send_message(msg)
+                    print("SMAIL SENT")
+        return True
+
+    except:
+        return False
+        print("ERRR SENDING GMAIL")
+
+        
+
 
 intents = discord.Intents.default()
 intents.members = True
@@ -172,22 +207,12 @@ async def on_message(message):
                 for i in verif_list:
                     insert_code(random_code, message.author.id, i)
                     insert_email(message_content, message.author.id, i)
-                emailmessage = Mail(
-                    from_email=os.environ.get('SENDGRID_EMAIL'),
-                    to_emails=message_content,
-                    subject='Verify your server email',
-                    html_content=str(random_code))
-                try:
-                    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-                    response = sg.send(emailmessage)
-                    print(response.status_code)
-                    print(response.body)
-                    print(response.headers)
-                    await message.channel.send("Email sent. **Reply here with your verification code**. If you haven't received it, check your spam folder.")
-                except Exception as e:
-                    mailgun_email = mailgun_send(message_content, random_code)
-                    if mailgun_email.status_code == 200:
-                        await message.channel.send("Email sent. **Reply here with your verification code**. If you haven't received it, check your spam folder.")
+                    sucess = gmail_send(message_content,str(random_code))
+                    if(sucess):
+                        await message.channel.send("Gmail sent. **Reply here with your verification code**. If you haven't received it, check your spam folder.")
+
+
+
                     else:
                         await message.channel.send("Email failed to send.")
             else:
@@ -338,4 +363,4 @@ async def verify(ctx):
             await ctx.author.send(verify_msg(ctx.guild, check_on_join[1]))
 
 keep_alive()
-client.run(os.environ.get('DISCORD_TOKEN'))
+client.run('ODQ1NDk1MzIyMzQ0MjkyMzYy.YKhy4Q.hN3JPEmiBjRtpPyt7fgBGYqFz7g')
